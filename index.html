@@ -2,329 +2,324 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-<title>YM-Move</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Knight Tour — YM</title>
 <style>
-  :root {
-    --bg: #0b1220;
-    --panel: #0f172a;
-    --accent: #6366f1;
-    --muted: #94a3b8;
-  }
-  html, body {
-    height: 100%;
+  body {
     margin: 0;
-    background: var(--bg);
-    color: #e6eef8;
-    font-family: "Inter", system-ui, Arial;
-    display: flex;
-    flex-direction: column;
+    background: #0b1220;
+    color: #fff;
+    font-family: Arial, sans-serif;
     overflow: hidden;
   }
-  header {
-    text-align: center;
-    padding: 12px 8px;
-    background: var(--panel);
-    font-size: 18px;
-    font-weight: bold;
-    letter-spacing: 0.5px;
+  #toggleSidebarBtn {
+    position: fixed;
+    top: 10px;
+    left: 10px;
+    background: #334155;
+    border: none;
+    color: #fff;
+    border-radius: 8px;
+    padding: 6px 10px;
+    cursor: pointer;
+    z-index: 20;
   }
-  #controls {
+  #sidebar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    height: 100%;
+    width: 240px;
+    background: rgba(15, 23, 42, 0.98);
+    box-shadow: 4px 0 10px rgba(0,0,0,0.5);
+    border-right: 1px solid #1e293b;
+    padding: 10px;
+    overflow-y: auto;
+    transform: translateX(-100%);
+    transition: transform 0.3s ease;
+    z-index: 15;
+  }
+  #sidebar.show {
+    transform: translateX(0);
+  }
+  #sidebar h2 {
+    font-size: 16px;
+    margin-top: 0;
+    color: #cbd5e1;
+    text-align: center;
+  }
+  .project-item {
+    background: #1e293b;
+    margin: 6px 0;
+    padding: 6px;
+    border-radius: 6px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .project-item span {
+    font-size: 13px;
+    color: #e2e8f0;
+    flex: 1;
+    text-align: left;
+  }
+  .project-item button {
+    background: #6366f1;
+    border: none;
+    border-radius: 6px;
+    color: white;
+    font-size: 10px;
+    padding: 3px 6px;
+    margin-left: 4px;
+  }
+  #toolbar {
+    background: #0f172a;
+    padding: 6px;
     display: flex;
     justify-content: center;
-    align-items: center;
     flex-wrap: wrap;
-    background: var(--panel);
-    gap: 10px;
-    padding: 10px;
-    position: sticky;
-    top: 0;
-    z-index: 5;
+    gap: 6px;
   }
   button {
-    background: var(--accent);
+    background: #6366f1;
     border: none;
     color: white;
-    font-size: 15px;
+    padding: 8px 14px;
     border-radius: 10px;
-    padding: 10px 16px;
-    flex: 1 1 30%;
-    min-width: 90px;
-    max-width: 140px;
-    box-shadow: 0 2px 6px rgba(0,0,0,0.25);
-    transition: 0.15s;
-  }
-  button:active {
-    transform: scale(0.96);
-    opacity: 0.85;
+    font-size: 14px;
+    cursor: pointer;
   }
   button.ghost {
     background: #1e293b;
     border: 1px solid #334155;
   }
-  #wrap {
-    flex: 1;
-    overflow: hidden;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-  }
   canvas {
-    width: 96vw;
-    height: 70vh;
-    background: #0f172a;
-    touch-action: none;
+    display: block;
+    margin: 0 auto;
+    background: white;
+    border: 3px solid #1e293b;
     border-radius: 10px;
-    box-shadow: 0 4px 25px rgba(0,0,0,0.6);
-    border: 2px solid #334155;
+    touch-action: none;
   }
-  footer {
-    text-align: center;
-    font-size: 13px;
-    color: var(--muted);
-    padding: 8px;
-    background: var(--panel);
+  #bottomBar {
+    position: fixed;
+    bottom: 30px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(15, 23, 42, 0.8);
+    border-radius: 12px;
+    padding: 8px 14px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.5);
   }
-  @media (max-width: 600px) {
-    button {
-      font-size: 14px;
-      padding: 8px 12px;
-      min-width: 70px;
-    }
-    header {
-      font-size: 16px;
-    }
-    footer {
-      font-size: 12px;
-    }
-    canvas {
-      width: 98vw;
-      height: 65vh;
-    }
+  #currentMode {
+    font-size: 10px;
+    color: #94a3b8;
+    margin-top: 4px;
   }
+  input[type=file]{ display:none }
 </style>
 </head>
 <body>
-<header>___</header>
+  <button id="toggleSidebarBtn">☰</button>
+  <div id="sidebar">
+    <h2>📁 Saved Projects</h2>
+    <div id="projectList"></div>
+  </div>
 
-<div id="controls">
-  <button id="nextBtn">Next</button>
-  <button id="undoBtn" class="ghost">Undo</button>
-  <button id="resetBtn" class="ghost">Reset</button>
-</div>
+  <div id="toolbar">
+    <button id="undoBtn" class="ghost">Undo</button>
+    <button id="resetBtn" class="ghost">Reset</button>
+    <button id="zoomIn">Zoom +</button>
+    <button id="zoomOut">Zoom -</button>
+    <button id="saveBtn">Save Project</button>
+    <button id="exportBtn">Export File</button>
+    <input id="importFileInput" type="file" accept="application/json">
+  </div>
 
-<div id="wrap">
   <canvas id="board"></canvas>
-</div>
-
-<footer>📱 Tap any cell to start • Valid knight moves only • Pinch to zoom • Drag to pan</footer>
+  <div id="bottomBar">
+    <button id="toggleMode">Switch Mode</button>
+    <div id="currentMode">Current: Normal</div>
+  </div>
 
 <script>
 const canvas = document.getElementById("board");
 const ctx = canvas.getContext("2d");
-const nextBtn = document.getElementById("nextBtn");
-const undoBtn = document.getElementById("undoBtn");
-const resetBtn = document.getElementById("resetBtn");
+const sidebar = document.getElementById("sidebar");
+const toggleSidebarBtn = document.getElementById("toggleSidebarBtn");
+const saveBtn = document.getElementById("saveBtn");
+const exportBtn = document.getElementById("exportBtn");
+const importFileInput = document.getElementById("importFileInput");
+const projectListDiv = document.getElementById("projectList");
 
-let N = 200;
-let cellSize = 20;
-canvas.width = window.innerWidth * 0.9;
-canvas.height = window.innerHeight * 0.7;
+let N = 200, cellSize = 20, scale = 1, originX = 0, originY = 0;
+let selected = Array.from({length:N}, ()=>Array(N).fill(false));
+let visited = Array.from({length:N}, ()=>Array(N).fill(0));
+let path = [], started = false, regionMode = false;
+let isDragging = false, dragStart = {x:0, y:0};
 
-let visited = Array.from({length: N}, () => Array(N).fill(0));
-let path = [];
-let started = false;
-let scale = 1;
-let originX = 0, originY = 0;
-let isDragging = false, dragStart = {x: 0, y: 0};
-
-const moves = [
-  [2, 1], [1, 2], [-1, 2], [-2, 1],
-  [-2, -1], [-1, -2], [1, -2], [2, -1]
-];
-
-function nextMove(x, y) {
-  let bestMove = null, minDeg = 9;
-  for (let [dx, dy] of moves) {
-    let nx = x + dx, ny = y + dy;
-    if (nx >= 0 && ny >= 0 && nx < N && ny < N && !visited[ny][nx]) {
-      let count = 0;
-      for (let [mx, my] of moves) {
-        let tx = nx + mx, ty = ny + my;
-        if (tx >= 0 && ty >= 0 && tx < N && ty < N && !visited[ty][tx]) count++;
-      }
-      if (count < minDeg) {
-        minDeg = count;
-        bestMove = [nx, ny];
-      }
-    }
-  }
-  return bestMove;
+function resizeCanvas(){
+  canvas.width = window.innerWidth * 0.9;
+  canvas.height = window.innerHeight * 0.8;
 }
+resizeCanvas();
+window.addEventListener('resize', ()=>{ resizeCanvas(); drawBoard(); });
 
-function drawBoard() {
-  ctx.setTransform(scale, 0, 0, scale, originX, originY);
-  ctx.clearRect(-originX/scale, -originY/scale, canvas.width/scale, canvas.height/scale);
+const moves = [[2,1],[1,2],[-1,2],[-2,1],[-2,-1],[-1,-2],[1,-2],[2,-1]];
 
-  ctx.strokeStyle = "#ddd";
-  ctx.lineWidth = 0.5 / scale;
-  for (let i = 0; i <= N; i++) {
-    ctx.beginPath();
-    ctx.moveTo(0, i * cellSize);
-    ctx.lineTo(N * cellSize, i * cellSize);
-    ctx.stroke();
+function drawBoard(){
+  ctx.setTransform(scale,0,0,scale,originX,originY);
+  ctx.clearRect(-originX/scale,-originY/scale,canvas.width/scale,canvas.height/scale);
 
-    ctx.beginPath();
-    ctx.moveTo(i * cellSize, 0);
-    ctx.lineTo(i * cellSize, N * cellSize);
-    ctx.stroke();
+  ctx.strokeStyle = "#000";
+  ctx.lineWidth = 0.5/scale;
+  for(let i=0;i<=N;i++){
+    ctx.beginPath();ctx.moveTo(0,i*cellSize);ctx.lineTo(N*cellSize,i*cellSize);ctx.stroke();
+    ctx.beginPath();ctx.moveTo(i*cellSize,0);ctx.lineTo(i*cellSize,N*cellSize);ctx.stroke();
   }
 
-  // path line
-  ctx.strokeStyle = "lime";
-  ctx.lineWidth = 2 / scale;
-  ctx.beginPath();
-  for (let i = 0; i < path.length - 1; i++) {
-    const [x1, y1] = path[i];
-    const [x2, y2] = path[i + 1];
-    ctx.moveTo(x1 * cellSize + cellSize/2, y1 * cellSize + cellSize/2);
-    ctx.lineTo(x2 * cellSize + cellSize/2, y2 * cellSize + cellSize/2);
+  // Region highlight
+  ctx.fillStyle = "rgba(100,255,100,0.2)";
+  for(let y=0;y<N;y++)for(let x=0;x<N;x++)if(selected[y][x])ctx.fillRect(x*cellSize,y*cellSize,cellSize,cellSize);
+
+  // Path line
+  ctx.strokeStyle = "lime"; ctx.lineWidth = 2/scale; ctx.beginPath();
+  for(let i=0;i<path.length-1;i++){
+    const [x1,y1]=path[i]; const [x2,y2]=path[i+1];
+    ctx.moveTo(x1*cellSize+cellSize/2,y1*cellSize+cellSize/2);
+    ctx.lineTo(x2*cellSize+cellSize/2,y2*cellSize+cellSize/2);
   }
   ctx.stroke();
 
-  // visited squares + move numbers
-  ctx.font = `${15 / scale}px Arial`;
-  ctx.textAlign = "center";
-  ctx.textBaseline = "middle";
-  for (let i = 0; i < path.length; i++) {
-    const [x, y] = path[i];
-    ctx.fillStyle = "#cde";
-    ctx.fillRect(x * cellSize, y * cellSize, cellSize, cellSize);
-    ctx.fillStyle = "#000";
-    ctx.fillText(i + 1, x * cellSize + cellSize/2, y * cellSize + cellSize/2);
-  }
-
-  // highlight possible moves
-  if (started && path.length) {
-    const [cx, cy] = path[path.length - 1];
+  // Possible moves
+  if(started && path.length){
+    const [cx,cy] = path[path.length-1];
     ctx.fillStyle = "rgba(0,255,0,0.25)";
-    for (let [dx, dy] of moves) {
-      const nx = cx + dx, ny = cy + dy;
-      if (nx >= 0 && ny >= 0 && nx < N && ny < N && !visited[ny][nx]) {
-        ctx.fillRect(nx * cellSize, ny * cellSize, cellSize, cellSize);
+    for(const [dx,dy] of moves){
+      const nx=cx+dx, ny=cy+dy;
+      if(nx>=0&&ny>=0&&nx<N&&ny<N && (!regionMode||selected[ny][nx]) && !visited[ny][nx]){
+        ctx.fillRect(nx*cellSize,ny*cellSize,cellSize,cellSize);
       }
     }
   }
-}
 
-function nextStep() {
-  if (!started || !path.length) return;
-  const [x, y] = path[path.length - 1];
-  const move = nextMove(x, y);
-  if (!move) return;
-  visited[move[1]][move[0]] = 1;
-  path.push(move);
-  drawBoard();
-}
-
-function undoStep() {
-  if (!started || path.length <= 1) return;
-  const [x, y] = path.pop();
-  visited[y][x] = 0;
-  drawBoard();
-}
-
-function resetBoard() {
-  visited = Array.from({length: N}, () => Array(N).fill(0));
-  path = [];
-  started = false;
-  drawBoard();
-}
-
-// 🟢 User-click Start + Manual move
-canvas.addEventListener("click", e => {
-  const rect = canvas.getBoundingClientRect();
-  const x = Math.floor((e.clientX - rect.left - originX) / (cellSize * scale));
-  const y = Math.floor((e.clientY - rect.top - originY) / (cellSize * scale));
-  if (x < 0 || y < 0 || x >= N || y >= N) return;
-
-  if (!started) {
-    started = true;
-    visited[y][x] = 1;
-    path = [[x, y]];
-    drawBoard();
-    return;
+  // Steps
+  ctx.font = `${10/scale}px Arial`;
+  ctx.textAlign="center";
+  ctx.textBaseline="middle";
+  for(let i=0;i<path.length;i++){
+    const [x,y]=path[i];
+    ctx.fillStyle="#cde";
+    ctx.fillRect(x*cellSize,y*cellSize,cellSize,cellSize);
+    ctx.fillStyle="#000";
+    ctx.fillText(i+1,x*cellSize+cellSize/2,y*cellSize+cellSize/2);
   }
+}
 
-  const [cx, cy] = path[path.length - 1];
-  const isValid = moves.some(([dx, dy]) => cx + dx === x && cy + dy === y);
-  if (isValid && !visited[y][x]) {
-    visited[y][x] = 1;
-    path.push([x, y]);
-    drawBoard();
+function eventToCell(e){
+  const rect=canvas.getBoundingClientRect();
+  const x=Math.floor((e.clientX-rect.left-originX)/(cellSize*scale));
+  const y=Math.floor((e.clientY-rect.top-originY)/(cellSize*scale));
+  return {x,y};
+}
+
+canvas.addEventListener("click",e=>{
+  const {x,y}=eventToCell(e);
+  if(x<0||y<0||x>=N||y>=N)return;
+  if(!started){selected[y][x]=!selected[y][x];drawBoard();return;}
+  const [cx,cy]=path[path.length-1];
+  const valid=moves.some(([dx,dy])=>cx+dx===x&&cy+dy===y);
+  if(valid && (!regionMode||selected[y][x]) && !visited[y][x]){
+    visited[y][x]=1; path.push([x,y]); drawBoard();
   }
 });
 
-// Zoom
-canvas.addEventListener("wheel", e => {
-  e.preventDefault();
-  const zoom = e.deltaY < 0 ? 1.1 : 0.9;
-  const mouseX = (e.offsetX - originX) / scale;
-  const mouseY = (e.offsetY - originY) / scale;
-  scale *= zoom;
-  originX = e.offsetX - mouseX * scale;
-  originY = e.offsetY - mouseY * scale;
+canvas.addEventListener("dblclick",e=>{
+  const {x,y}=eventToCell(e);
+  if(x<0||y<0||x>=N||y>=N)return;
+  if(regionMode && !selected[y][x]) return alert("Start inside region only!");
+  started=true;
+  visited[y][x]=1;
+  path=[[x,y]];
   drawBoard();
 });
 
-// Touch zoom
-let lastDist = 0;
-canvas.addEventListener("touchmove", e => {
-  if (e.touches.length === 2) {
-    e.preventDefault();
-    const dx = e.touches[0].clientX - e.touches[1].clientX;
-    const dy = e.touches[0].clientY - e.touches[1].clientY;
-    const dist = Math.sqrt(dx*dx + dy*dy);
-    if (lastDist) {
-      const zoom = dist / lastDist;
-      const rect = canvas.getBoundingClientRect();
-      const cx = (e.touches[0].clientX + e.touches[1].clientX) / 2 - rect.left;
-      const cy = (e.touches[0].clientY + e.touches[1].clientY) / 2 - rect.top;
-      const mouseX = (cx - originX) / scale;
-      const mouseY = (cy - originY) / scale;
-      scale *= zoom;
-      originX = cx - mouseX * scale;
-      originY = cy - mouseY * scale;
-      drawBoard();
+canvas.addEventListener("pointerdown",e=>{
+  isDragging=true;
+  dragStart.x=e.clientX-originX;
+  dragStart.y=e.clientY-originY;
+  canvas.setPointerCapture(e.pointerId);
+});
+canvas.addEventListener("pointermove",e=>{
+  if(isDragging){
+    originX=e.clientX-dragStart.x;
+    originY=e.clientY-dragStart.y;
+    drawBoard();
+  }
+});
+canvas.addEventListener("pointerup",e=>{
+  isDragging=false;
+  canvas.releasePointerCapture(e.pointerId);
+});
+
+document.getElementById("undoBtn").onclick=()=>{if(path.length>1){const [x,y]=path.pop();visited[y][x]=0;drawBoard();}};
+document.getElementById("resetBtn").onclick=()=>{selected=Array.from({length:N},()=>Array(N).fill(false));visited=Array.from({length:N},()=>Array(N).fill(0));path=[];started=false;drawBoard();};
+document.getElementById("zoomIn").onclick=()=>{scale*=1.2;drawBoard();};
+document.getElementById("zoomOut").onclick=()=>{scale/=1.2;drawBoard();};
+document.getElementById("toggleMode").onclick=()=>{regionMode=!regionMode;document.getElementById("currentMode").textContent=`Current: ${regionMode?"Region":"Normal"}`;drawBoard();};
+
+toggleSidebarBtn.onclick=()=>{sidebar.classList.toggle("show");};
+
+const STORAGE_PREFIX='knight_project_';
+function serializeProject(){return JSON.stringify({meta:{N,cellSize,scale,originX,originY,regionMode,started},selected,visited,path});}
+function saveProject(){const name=prompt('Enter project name:');if(!name)return;localStorage.setItem(STORAGE_PREFIX+name,serializeProject());refreshProjectList();alert('Saved '+name);}
+function loadProjectByName(name){const raw=localStorage.getItem(STORAGE_PREFIX+name);if(!raw)return alert('Not found');applyProjectData(JSON.parse(raw));alert('Loaded '+name);}
+function deleteProject(name){if(confirm('Delete '+name+'?')){localStorage.removeItem(STORAGE_PREFIX+name);refreshProjectList();}}
+function refreshProjectList(){
+  projectListDiv.innerHTML='';
+  for(let i=0;i<localStorage.length;i++){
+    const key=localStorage.key(i);
+    if(key.startsWith(STORAGE_PREFIX)){
+      const name=key.replace(STORAGE_PREFIX,'');
+      const div=document.createElement('div');
+      div.className='project-item';
+      div.innerHTML=`<span>${name}</span><div><button onclick=\"loadProjectByName('${name}')\">Load</button><button onclick=\"deleteProject('${name}')\">❌</button></div>`;
+      projectListDiv.appendChild(div);
     }
-    lastDist = dist;
   }
-});
-canvas.addEventListener("touchend", () => lastDist = 0);
+}
+function exportProjectAsFile(){
+  const blob=new Blob([serializeProject()],{type:'application/json'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');
+  a.href=url;
+  a.download='knight_project.json';
+  a.click();
+  URL.revokeObjectURL(url);
+}
+function importProjectFromFile(file){
+  const fr=new FileReader();
+  fr.onload=()=>{try{applyProjectData(JSON.parse(fr.result));alert('Imported');}catch(e){alert('Invalid JSON');}};
+  fr.readAsText(file);
+}
+function applyProjectData(data){
+  if(!data||!data.meta)return;
+  N=data.meta.N||N;
+  cellSize=data.meta.cellSize||cellSize;
+  scale=data.meta.scale||scale;
+  originX=data.meta.originX||originX;
+  originY=data.meta.originY||originY;
+  regionMode=!!data.meta.regionMode;
+  started=!!data.meta.started;
+  selected=data.selected||selected;
+  visited=data.visited||visited;
+  path=data.path||[];
+  drawBoard();
+}
 
-// Pan
-canvas.addEventListener("pointerdown", e => {
-  isDragging = true;
-  dragStart.x = e.clientX - originX;
-  dragStart.y = e.clientY - originY;
-  canvas.style.cursor = "grabbing";
-});
-canvas.addEventListener("pointermove", e => {
-  if (isDragging) {
-    originX = e.clientX - dragStart.x;
-    originY = e.clientY - dragStart.y;
-    drawBoard();
-  }
-});
-canvas.addEventListener("pointerup", () => {
-  isDragging = false;
-  canvas.style.cursor = "grab";
-});
-
-nextBtn.onclick = nextStep;
-undoBtn.onclick = undoStep;
-resetBtn.onclick = resetBoard;
-
+saveBtn.onclick=saveProject;
+exportBtn.onclick=exportProjectAsFile;
+refreshProjectList();
 drawBoard();
 </script>
 </body>
